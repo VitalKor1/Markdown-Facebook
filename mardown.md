@@ -1,198 +1,134 @@
-# 📘 Projekt: Własny Facebook (PHP + MySQL + JS)
+# 🚀 FAebook – Nowoczesna Platforma Społecznościowa
 
-## 🎯 Cel projektu
+## 📌 Koncepcja Projektu
 
-Celem projektu jest stworzenie uproszczonej wersji Facebooka z:
-- systemem użytkowników,
-- tablicą postów (feed),
-- lajkami i komentarzami,
-- wyszukiwarką użytkowników,
-- historią wyszukiwań,
-- systemem znajomych.
+FAebook to skalowalna aplikacja społecznościowa typu full-stack, umożliwiająca użytkownikom publikowanie treści, budowanie sieci znajomych oraz interakcję w czasie rzeczywistym. 
 
-Projekt będzie oparty na:
-- **Frontend:** HTML, CSS, JavaScript  
-- **Backend:** PHP  
-- **Baza danych:** MySQL  
+Projekt został zaprojektowany w architekturze warstwowej (3-tier architecture), co zapewnia:
+- czytelny podział odpowiedzialności
+- łatwą rozbudowę
+- możliwość skalowania
+- bezpieczeństwo danych
+- modularność kodu
+
+System opiera się na architekturze klient–serwer z REST API.
 
 ---
 
-# 🧱 ETAP 1 — Projekt bazy danych
+# 🏗️ Architektura Systemu
 
-Najpierw tworzę bazę danych `myfacebook`.
+## 1️⃣ Warstwa prezentacji (Frontend)
 
-## Tabele:
+Technologie:
+- HTML5
+- CSS3 (Flexbox / Grid)
+- JavaScript (ES6+)
+- Fetch API (komunikacja z backendem)
 
-### 👤 users
-Przechowuje dane użytkowników.
+Odpowiedzialność:
+- Renderowanie interfejsu użytkownika
+- Dynamiczne ładowanie danych (AJAX)
+- Obsługa interakcji użytkownika
+- Aktualizacja widoku bez przeładowania strony (SPA-like behavior)
 
-- id (INT, AUTO_INCREMENT, PRIMARY KEY)
-- username (VARCHAR)
-- email (VARCHAR)
-- password_hash (VARCHAR)
-- avatar_url (VARCHAR)
-- bio (TEXT)
-- created_at (TIMESTAMP)
-
----
-
-### 📝 posts
-Przechowuje posty użytkowników.
-
-- id (INT, AUTO_INCREMENT)
-- user_id (INT, FOREIGN KEY)
-- content (TEXT)
-- image_url (VARCHAR)
-- created_at (TIMESTAMP)
-- likes_count (INT)
+Frontend nie przechowuje logiki biznesowej – jedynie prezentuje dane pobrane z API.
 
 ---
 
-### 💬 comments
-Komentarze pod postami.
+## 2️⃣ Warstwa logiki aplikacji (Backend – PHP REST API)
 
-- id
-- post_id
-- user_id
-- content
-- created_at
+Technologie:
+- PHP 8+
+- PDO (bezpieczne połączenie z bazą danych)
+- JSON jako format komunikacji
 
----
+Backend pełni rolę pośrednika między frontendem a bazą danych.
 
-### 🤝 friends
-Relacje między użytkownikami.
+### Odpowiedzialność backendu:
 
-- id
-- user_id
-- friend_id
-- status (pending / accepted)
+- Autoryzacja i uwierzytelnianie użytkowników
+- Walidacja danych wejściowych
+- Obsługa logiki biznesowej
+- Zarządzanie relacjami użytkowników
+- Obsługa postów, komentarzy i polubień
+- Zwracanie odpowiedzi w formacie JSON
 
----
-
-### 🔎 search_history
-Historia wyszukiwań użytkownika.
-
-- id
-- user_id
-- query
-- timestamp
+Każda funkcjonalność systemu jest realizowana poprzez oddzielny endpoint API.
 
 ---
 
-# 🧠 ETAP 2 — Backend (PHP)
+## 3️⃣ Warstwa danych (MySQL)
 
-## Co będę robić:
+Relacyjna baza danych przechowuje dane użytkowników i ich aktywność.
 
-### 1️⃣ Połączenie z bazą
-Tworzę plik `db_connect.php` z PDO.
+### Główne encje systemu:
 
-### 2️⃣ Rejestracja i logowanie
-- haszowanie hasła (`password_hash`)
-- sesje (`session_start()`)
+### 👤 Users
+Reprezentuje konto użytkownika w systemie.
 
-### 3️⃣ Pobieranie postów
-Plik `get_posts.php`:
-- pobiera posty znajomych
-- sortuje po `created_at DESC`
-- zwraca dane jako JSON
-
-### 4️⃣ Dodawanie posta
-Plik `add_post.php`:
-- zapisuje post do bazy
-- przypisuje go do zalogowanego użytkownika
-
-### 5️⃣ Lajki
-Plik `like_post.php`:
-- zwiększa `likes_count`
-- aktualizuje bez przeładowania strony (AJAX)
+Relacje:
+- 1:N z posts
+- 1:N z comments
+- N:N z users (relacja friends)
 
 ---
 
-# 🎨 ETAP 3 — Frontend
+### 📝 Posts
+Reprezentuje treści publikowane przez użytkowników.
 
-## 📌 Strona główna (Feed)
-
-Zawiera:
-- formularz dodawania posta
-- listę postów
-- przycisk „Lubię to”
-- sekcję komentarzy
-
-Posty generowane dynamicznie przez JavaScript.
+Relacje:
+- N:1 z users
+- 1:N z comments
 
 ---
 
-## 👤 Profil użytkownika
+### 💬 Comments
+Reprezentuje komentarze pod postami.
 
-Zawiera:
-- zdjęcie w tle
-- avatar
-- bio
-- lista postów użytkownika
-
----
-
-## 🔎 Wyszukiwarka
-
-### Jak działa:
-1. Użytkownik wpisuje nazwę.
-2. JS wysyła zapytanie do PHP.
-3. PHP zapisuje frazę w `search_history`.
-4. Pod polem wyszukiwania pokazują się ostatnie wyszukiwania.
-
-Historia działa do momentu zakończenia sesji.
+Relacje:
+- N:1 z posts
+- N:1 z users
 
 ---
 
-# ⚡ ETAP 4 — Interakcje (JavaScript)
+### 🤝 Friends
+Tabela relacyjna obsługująca relacje typu wiele-do-wielu między użytkownikami.
 
-Będę używać:
-- `fetch()`
-- manipulacji DOM
-- event listenerów
-
-### Funkcje:
-- dynamiczne ładowanie postów
-- lajki bez przeładowania
-- komentarze bez refreshu
-- live search (podpowiedzi podczas pisania)
+Status relacji:
+- pending
+- accepted
+- rejected
 
 ---
 
-# 🚀 ETAP 5 — Zaawansowane funkcje
-
-Aby projekt wyglądał profesjonalnie:
-
-## 🔔 System powiadomień
-- ktoś polubił post
-- ktoś wysłał zaproszenie
-
-## 💬 Prosty Messenger
-- AJAX polling
-lub
-- WebSocket (bardziej zaawansowane)
-
-## ♾ Infinite Scroll
-- ładowanie kolejnych postów przy przewijaniu
-
-## 🖼 Upload zdjęć
-- walidacja typu pliku
-- ograniczenie rozmiaru
-- kompresja
+### 🔎 Search History
+Przechowuje historię wyszukiwań użytkownika w celu poprawy UX.
 
 ---
 
-# 🛡 Bezpieczeństwo
+# 🔄 Przepływ Danych (Data Flow)
 
-Muszę pamiętać o:
+1. Użytkownik wykonuje akcję w interfejsie (np. dodaje post).
+2. JavaScript wysyła zapytanie HTTP (POST/GET) do endpointu PHP.
+3. Backend:
+   - waliduje dane
+   - wykonuje operację na bazie danych
+   - zwraca odpowiedź JSON
+4. Frontend aktualizuje widok dynamicznie.
 
-- Prepared Statements (PDO)
-- walidacji danych
-- ochronie przed SQL Injection
-- `htmlspecialchars()` przy wyświetlaniu danych
-- sprawdzaniu sesji użytkownika
+Cały system działa asynchronicznie bez przeładowywania strony.
 
 ---
 
-# 📂 Struktura plików
+# 🔐 Bezpieczeństwo
+
+- Hasła przechowywane jako `password_hash`
+- Prepared statements (PDO)
+- Walidacja danych po stronie serwera
+- Ochrona przed SQL Injection
+- Ograniczenie dostępu do endpointów (sesje / tokeny)
+
+---
+
+# 📁 Struktura Projektu
 
