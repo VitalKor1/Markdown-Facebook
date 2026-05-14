@@ -1,4 +1,4 @@
-# 🚀 FAebook – Nowoczesna Platforma Społecznościowa
+# 🚀 Facebook – Nowoczesna Platforma Społecznościowa
 
 ## 📌 Koncepcja Projektu
 
